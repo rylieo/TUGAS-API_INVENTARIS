@@ -15,7 +15,7 @@ class RestorationController extends Controller
         $this->middleware('auth:api');
     }
 
-    public function store (Request $request, $lending_id)
+    public function store(Request $request, $lending_id)
     {
         try {
             $this->validate($request, [

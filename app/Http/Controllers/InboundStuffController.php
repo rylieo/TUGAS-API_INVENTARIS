@@ -19,7 +19,7 @@ class InboundStuffController extends Controller
     public function index(Request $request)
     {
         try {
-            if($request->filter_id) {
+            if ($request->filter_id) {
                 $data = InboundStuff::where('stuff_id', $request->filter_id)->with('stuff', 'stuff.stuffStock')->get();
             } else {
                 $data = InboundStuff::all();
@@ -63,7 +63,7 @@ class InboundStuffController extends Controller
                 $stockData = StuffStock::where('stuff_id', $request->stuff_id)->first();
                 if ($stockData) { //kalau data stuffstock yg stuff_id nya kaya yg di buat ada
                     $total_available = (int)$stockData['total_available'] + (int)$request->total; //(int) : memastikan kalau dia integer, klo ngga integer diubah jd integer
-                    $stockData->update([ 'total_available' => $total_available ]);
+                    $stockData->update(['total_available' => $total_available]);
                 } else { //kalau stock nya belum ada, dibuat
                     StuffStock::create([
                         'stuff_id' => $request->stuff_id,
@@ -87,28 +87,28 @@ class InboundStuffController extends Controller
             $stuffId = $inboundData['stuff_id'];
             $totalInbound = $inboundData['total'];
 
-            $dataStock = StuffStock::where('stuff_id',$inboundData['stuff_id'])->first();
+            $dataStock = StuffStock::where('stuff_id', $inboundData['stuff_id'])->first();
             $total_available = (int)$dataStock['total_available'] - (int)$totalInbound;
 
             if ($total_available < 0) {
-                return ApiFormatter::sendResponse(400,'bad request','Jumlah total imbound yang akan dihapus lebih besar dari total available stuff saat ini!');
+                return ApiFormatter::sendResponse(400, 'bad request', 'Jumlah total imbound yang akan dihapus lebih besar dari total available stuff saat ini!');
             }
-            
+
             $inboundData->delete();
 
             $minusTotalStock = StuffStock::where('stuff_id', $inboundData['stuff_id'])->update(['total_available' => $total_available]);
 
-            if ($minusTotalStock){
-                $updatedStuffWithInboundAndStock = Stuff::where('id', $inboundData['staff_id'])->with('inboundStuffs','stuffStock')->first();
-                
+            if ($minusTotalStock) {
+                $updatedStuffWithInboundAndStock = Stuff::where('id', $inboundData['staff_id'])->with('inboundStuffs', 'stuffStock')->first();
+
                 $inboundData->delete();
-                return ApiFormatter::sendResponse(200,'Success',$updatedStuffWithInboundAndStock);
+                return ApiFormatter::sendResponse(200, 'Success', $updatedStuffWithInboundAndStock);
             }
-        }catch (\Exception $err){
-            return ApiFormatter::sendResponse(400,'bad request',$err->getMessage());
+        } catch (\Exception $err) {
+            return ApiFormatter::sendResponse(400, 'bad request', $err->getMessage());
         }
     }
-    
+
     public function trash()
     {
         try {
@@ -142,15 +142,15 @@ class InboundStuffController extends Controller
     public function permanentDelete($id)
     {
         try {
-           $data = InboundStuff::onlyTrashed()->where('id', $id)->first();
+            $data = InboundStuff::onlyTrashed()->where('id', $id)->first();
 
-           $images = explode("/", $data['proff_file']);
-           if (file_exists(public_path('upload-images/' . $images[4]))) {
+            $images = explode("/", $data['proff_file']);
+            if (file_exists(public_path('upload-images/' . $images[4]))) {
                 unlink(public_path('upload-images/' . $images[4]));
-           }
+            }
 
-           $data->forceDelete();
-           return ApiFormatter::sendResponse(200, 'success', 'Berhasil hapus permanen inbound beserta file nya!');
+            $data->forceDelete();
+            return ApiFormatter::sendResponse(200, 'success', 'Berhasil hapus permanen inbound beserta file nya!');
         } catch (\Exception $err) {
             return ApiFormatter::sendResponse(400, 'bad request', $err->getMessage());
         }
